@@ -8,6 +8,7 @@ An OCaml wrapper for IBM Qiskit quantum computing toolkit.
 ```ocaml
 open Qiskit
 
+(* Create the circuit *)
 let qc = quantum_circuit 4 4 
 |> x 0 
 |> id 1 
@@ -16,12 +17,10 @@ let qc = quantum_circuit 4 4
 |> barrier
 |> measure 0 0
 |> measure 1 1
-|> draw
+|> draw;;
 
-let be = Aer.get_backend "qasm_simulator"
-let counts = execute qc be |> result |> get_counts |> plot_histogram
-
-
+(* Start a simulation *)
+Aer.get_backend "qasm_simulator" |> execute qc |> result |> get_counts |> plot_histogram
 ```
 
 
