@@ -1,0 +1,11 @@
+(executable
+ (public_name test)
+ (name test)
+ (libraries pyml qiskit)
+ (modules test))
+
+
+
+(env
+  (dev
+    (flags (:standard -warn-error -A))))
