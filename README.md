@@ -5,7 +5,6 @@ An OCaml wrapper for IBM Qiskit quantum computing toolkit.
 
 ## Example
 
-
 ```ocaml
 open Qiskit
 
@@ -47,6 +46,18 @@ j
 ```
 
 ![Quantum sim res](https://raw.githubusercontent.com/dakk/caml_qiskit/master/media/readme_resreal.png)
+
+
+
+## Install
+
+```opam install qiskit```
+
+You also need to install these python libraries (via pip):
+
+- matplotlib
+- numpy
+- qiskit
 
 
 ## License
