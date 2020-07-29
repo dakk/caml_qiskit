@@ -22,8 +22,8 @@ depends: [
   "dune" {>= "2.5.0"}
   "pyml" {>= "20200518"}
 
-  "ounit" {with-test & >= "2.0.8"}
-  "odoc" {with-test & >= "1.3.0"}
+#   "ounit" {with-test & >= "2.0.8"}
+#   "odoc" {with-test & >= "1.3.0"}
 ]
 
 depexts: [

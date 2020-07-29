@@ -1,8 +1,8 @@
 (executable
- (public_name test)
- (name test)
+ (public_name ex1)
+ (name ex1)
  (libraries pyml qiskit)
- (modules test))
+ (modules ex1))
 
 
 

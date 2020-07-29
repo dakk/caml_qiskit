@@ -82,6 +82,19 @@ module Aer = struct
     Py.Module.get_function qk_aer "get_backend" [| Py.String.of_string n |]
 end
 
+module Provider = struct 
+  type qprovider = Py.Object.t
+
+  let get_backend (n: string) (qp: qprovider) : Aer.backend = 
+    Py.Module.get_function qp "get_backend" [| Py.String.of_string n |]
+end
+
+(* IBMQ *)
+module IBMQ = struct 
+  let enable_account (api: string): Provider.qprovider =
+    let qk_ibmq = Py.Module.get qk "IBMQ" in
+    Py.Module.get_function qk_ibmq "enable_account" [| Py.String.of_string api |]
+end
 
 (* simulation *)
 type qjob = Py.Object.t
@@ -91,6 +104,7 @@ type qcounts = Py.Object.t
 let execute (qc:qcircuit) (sim: Aer.backend): qjob = 
   Py.Module.get_function qk "execute" [| qc; sim |]
 
+
 let result (qex: qjob): qres = 
   Py.Module.get_function qex "result" [| |]
 
@@ -98,8 +112,19 @@ let get_counts (qres: qres): qcounts =
   Py.Module.get_function qres "get_counts" [| |]
 
 
-let plot_histogram (c: qcounts) = 
-  let qk_vis = Py.Module.get qk "visualization" in
-  let s = Py.Module.get_function qk_vis "plot_histogram" [| c |] in 
-  Py.Module.get_function plt "show" [||] |> ignore
-  
+module Tools = struct 
+  module Monitor = struct 
+    let job_monitor (qj: qjob): unit =
+      let qk_ts = Py.Module.get qk "tools" in
+      let qk_mon = Py.Module.get qk_ts "monitor" in
+      Py.Module.get_function qk_mon "job_monitor" [| qj |] |> ignore
+  end
+end
+
+
+module Visualization = struct 
+  let plot_histogram (c: qcounts) = 
+    let qk_vis = Py.Module.get qk "visualization" in
+    let s = Py.Module.get_function qk_vis "plot_histogram" [| c |] in 
+    Py.Module.get_function plt "show" [||] |> ignore
+end  
