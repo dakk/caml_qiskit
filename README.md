@@ -21,7 +21,7 @@ let qc = quantum_circuit 2 2
   |> draw;;
 ```
 
-![Quantum circuit](https://github.com/dakk/caml_qiskit/master/media/readme_circuit.png)
+![Quantum circuit](https://raw.githubusercontent.com/dakk/caml_qiskit/master/media/readme_circuit.png)
 
 ```ocaml
 (* Start a simulation *)
@@ -32,7 +32,7 @@ Aer.get_backend "qasm_simulator"
   |> Visualization.plot_histogram;
 ```
 
-![Quantum sim res](https://github.com/dakk/caml_qiskit/master/media/readme_ressim.png)
+![Quantum sim res](https://raw.githubusercontent.com/dakk/caml_qiskit/master/media/readme_ressim.png)
 
 
 ```ocaml
@@ -46,7 +46,7 @@ j
   |> Visualization.plot_histogram;;
 ```
 
-![Quantum sim res](https://github.com/dakk/caml_qiskit/master/media/readme_resreal.png)
+![Quantum sim res](https://raw.githubusercontent.com/dakk/caml_qiskit/master/media/readme_resreal.png)
 
 
 ## License
