@@ -17,12 +17,3 @@ Aer.get_backend "qasm_simulator"
   |> result 
   |> get_counts 
   |> Visualization.plot_histogram;
-
-(* Run the circuit on real quantum hardware *)
-(* let prov = IBMQ.enable_account "IBMQ_API_KEY" in
-let j = Provider.get_backend "ibmq_london" prov |> execute qc in
-Tools.Monitor.job_monitor j;
-j 
-  |> result 
-  |> get_counts 
-  |> Visualization.plot_histogram;; *)

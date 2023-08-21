@@ -4,7 +4,11 @@
  (libraries pyml qiskit)
  (modules ex1))
 
-
+(executable
+ (public_name ex2_ibm)
+ (name ex2_ibm)
+ (libraries pyml qiskit)
+ (modules ex2_ibm))
 
 (env
   (dev
