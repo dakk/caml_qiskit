@@ -12,8 +12,9 @@ let qc = quantum_circuit 2 2
   |> draw;;
 
 (* Start a simulation *)
-Aer.get_backend "qasm_simulator" 
-  |> execute qc 
-  |> result 
-  |> get_counts 
-  |> Visualization.plot_histogram;
+let j = Aer.get_backend "qasm_simulator" 
+  |> execute qc;;
+
+Tools.Monitor.job_monitor j;;
+
+j |> result |> get_counts |> Visualization.plot_histogram;;

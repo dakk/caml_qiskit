@@ -12,8 +12,9 @@ run-ex2_ibm:
 
 .PHONY : coverage
 coverage : clean
-	BISECT_ENABLE=YES jbuilder runtest
-	bisect-ppx-report -I _build/default/ -html _coverage/ `find . -name 'bisect*.out'`
+	find . -name '*.coverage' | xargs rm -f
+	dune runtest --instrument-with bisect_ppx --force
+	bisect-ppx-report html
 
 .PHONY : pin
 pin: 

@@ -2,8 +2,8 @@
  (public_name qiskit)
  (name qiskit)
  (libraries pyml)
+ (instrumentation (backend bisect_ppx))
  (modules qiskit))
-
 
 (env
   (dev
