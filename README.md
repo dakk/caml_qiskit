@@ -38,7 +38,6 @@ Aer.get_backend "qasm_simulator"
 (* Run the circuit on real quantum hardware *)
 let _ = IBMProvider.save_account "TOKEN" in
 let j = IBMProvider.get_backend "ibmq_london" prov |> execute qc in
-// TODO FIX
 Tools.Monitor.job_monitor j;
 j 
   |> result 
