@@ -36,8 +36,9 @@ Aer.get_backend "qasm_simulator"
 
 ```ocaml
 (* Run the circuit on real quantum hardware *)
-let prov = IBMQ.enable_account "IBMQ_API_KEY" in
-let j = Provider.get_backend "ibmq_london" prov |> execute qc in
+let _ = IBMProvider.save_account "TOKEN" in
+let j = IBMProvider.get_backend "ibmq_london" prov |> execute qc in
+// TODO FIX
 Tools.Monitor.job_monitor j;
 j 
   |> result 
@@ -58,11 +59,15 @@ You also need to install these python libraries (via pip):
 - matplotlib
 - numpy
 - qiskit
+- pylatexenc
+
+And optional for IBM quantum cloud computers:
+- qiskit_ibm_provider
 
 
 ## License
 ```
-Copyright (c) 2020 Davide Gessa
+Copyright (c) 2020-2023 Davide Gessa
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
