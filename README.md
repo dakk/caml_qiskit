@@ -2,6 +2,8 @@
 
 An OCaml wrapper for IBM Qiskit quantum computing toolkit.
 
+```opam install qiskit```
+
 
 ## Example
 
