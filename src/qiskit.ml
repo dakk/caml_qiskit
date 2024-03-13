@@ -1,3 +1,26 @@
+(* Copyright (c) 2020-2024 Davide Gessa
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE. *)
+
 Py.initialize ()
 
 let np = Py.import "numpy"
@@ -19,9 +42,6 @@ let from_qasm_str (s: string): qcircuit =
 let from_qasm_file (f: string): qcircuit = 
   let qc = Py.Module.get qk "QuantumCircuit" in
   Py.Module.get_function qc "from_qasm_file" [| Py.String.of_string f |]
-
-let qasm (qc: qcircuit): string = 
-  Py.Module.get_function qc "qasm" [||] |> Py.String.to_string
 
 let depth (qc: qcircuit): int = 
   Py.Module.get_function qc "depth" [||] |> Py.Int.to_int
@@ -62,7 +82,13 @@ let initialize_from_int (bm: int) (qc: qcircuit) =
 let initialize_from_str (lb: string) (qc: qcircuit) =
   let lb' = Py.String.of_string lb in
   Py.Module.get_function qc "initialize" [| lb' |] |> ignore; qc
-    
+
+let save_state (qc: qcircuit): qcircuit = 
+  Py.Module.get_function qc "save_state" [| |] |> ignore; qc    
+
+let remove_final_measurements (qc: qcircuit): qcircuit =
+  Py.Module.get_function qc "remove_final_measurements" [| |] |> ignore; qc    
+
 let barrier (qc: qcircuit): qcircuit = 
   Py.Module.get_function qc "barrier" [| |] |> ignore; qc
 
@@ -149,30 +175,47 @@ type qstatevector = Py.Object.t
 type qunitary = Py.Object.t
 
 
+module Qasm2 = struct 
+  let qasm2 = Py.import "qiskit.qasm2" 
+
+  let dump (qc: qcircuit): string = 
+    Py.Module.get_function qasm2 "dumps" [| qc |] |> Py.String.to_string
+
+end
 
 module Provider = struct 
   type qprovider = Py.Object.t
   type backend = Py.Object.t
-
-  let get_backend (n: string) (qp: qprovider) : backend = 
-    Py.Module.get_function qp "get_backend" [| Py.String.of_string n |]
 end
 
-module Aer = struct 
-  let get_backend (n: string) : Provider.backend = 
-    let qk_aer = Py.Module.get qk "Aer" in
-    Py.Module.get_function qk_aer "get_backend" [| Py.String.of_string n |]
+module BasicProvider = struct 
+  let bp_providers = Py.import "qiskit.providers.basic_provider" 
+
+  let basic_provider (_: unit): Provider.qprovider = 
+    Py.Module.get_function bp_providers "BasicProvider" [||]
+
+  let get_backend (n: string) (iprov: Provider.qprovider) : Provider.backend = 
+    Py.Module.get_function iprov "get_backend" [| Py.String.of_string n |]
 end
+
+let aer_simulator (meth: string): Provider.backend = 
+  let m = Py.Import.add_module "aer_wrap" in
+  Py.Run.eval ~start:Py.File "import aer_wrap, qiskit_aer\naer_wrap.wrap = lambda m: qiskit_aer.AerSimulator(method=m)" |> ignore;
+  Py.Module.get_function m "wrap" [| Py.String.of_string meth |]
 
 module IBMProvider = struct 
+  let qibm = Py.import "qiskit_ibm_provider"
+
   (* TODO: IBMPRovider class as an optional token parameter *)
   let ibm_provider ?(token="") (_: unit): Provider.qprovider = 
-    let qibm = Py.import "qiskit_ibm_provider" in
     if token <> "" then
       Py.Module.get_function qibm "IBMProvider" [| Py.String.of_string token |]
     else
       Py.Module.get_function qibm "IBMProvider" [||]
 
+  let job_monitor (qj: qjob): unit =
+    Py.Module.get_function qibm "job_monitor" [| qj |] |> ignore
+    
   let save_account token (iprov: Provider.qprovider) = 
     Py.Module.get_function iprov "save_account" [| Py.String.of_string token |] |> ignore;
     iprov
@@ -186,8 +229,11 @@ end
 
 
 (* TODO: add optional shots (get_function_with_keywords) ?(shots=1024)*)
-let execute (qc: qcircuit) (sim: Provider.backend): qjob = 
-  Py.Module.get_function qk "execute" [| qc; sim |]
+let run (qc: qcircuit) (sim: Provider.backend): qjob = 
+  Py.Module.get_function sim "run" [| qc |]
+
+let transpile (qc: qcircuit) (sim: Provider.backend): qjob = 
+  Py.Module.get_function qk "transpile" [| qc; sim |]
 
 let result (qex: qjob): qres = 
   Py.Module.get_function qex "result" [| |]
@@ -201,21 +247,6 @@ let get_counts (qres: qres): qcounts =
 let get_unitary (qres: qres) (qc: qcircuit): qunitary = 
   Py.Module.get_function qres "get_unitary" [| qc |]
 
-
-
-(* Tools *)
-module Tools = struct
-  module Monitor = struct 
-    let qk_ts = Py.Module.get qk "tools"
-    let qk_mon = Py.Module.get qk_ts "monitor"
-
-    let job_monitor (qj: qjob): unit =
-      Py.Module.get_function qk_mon "job_monitor" [| qj |] |> ignore
-
-    let status (qj: qjob): string =
-      Py.Module.get_function qk_mon "status" [| qj |] |> Py.Object.to_string
-  end
-end
 
 
 (* Visualization *)
@@ -252,6 +283,9 @@ module Quantum_info = struct
     let s = Py.Module.get_function qk_qinfo "state_fidelity" [| sv1; sv2 |] in 
     Py.Float.to_float s
   
+  let statevector (qc: qcircuit) : qstatevector = 
+    Py.Module.get_function qk_qinfo "Statevector" [| qc |]
+
   (* TODO *)
   (* print(average_gate_fidelity(op_a, op_b))
   print(process_fidelity(op_a, op_b)) *)

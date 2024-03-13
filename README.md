@@ -26,8 +26,8 @@ let qc = quantum_circuit 2 2
 
 ```ocaml
 (* Start a simulation *)
-Aer.get_backend "qasm_simulator" 
-  |> execute qc 
+aer_simulator "statevector" 
+  |> run qc 
   |> result 
   |> get_counts 
   |> Visualization.plot_histogram;
@@ -39,7 +39,7 @@ Aer.get_backend "qasm_simulator"
 ```ocaml
 (* Run the circuit on real quantum hardware *)
 let _ = IBMProvider.save_account "TOKEN" in
-let j = IBMProvider.get_backend "ibmq_london" prov |> execute qc in
+let j = IBMProvider.get_backend "ibmq_london" prov |> run qc in
 Tools.Monitor.job_monitor j;
 j 
   |> result 
@@ -68,7 +68,7 @@ And optional for IBM quantum cloud computers:
 
 ## License
 ```
-Copyright (c) 2020-2023 Davide Gessa
+Copyright (c) 2020-2024 Davide Gessa
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
