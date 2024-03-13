@@ -40,7 +40,7 @@ aer_simulator "statevector"
 (* Run the circuit on real quantum hardware *)
 let _ = IBMProvider.save_account "TOKEN" in
 let j = IBMProvider.get_backend "ibmq_london" prov |> run qc in
-Tools.Monitor.job_monitor j;
+IBMProvider.job_monitor j;
 j 
   |> result 
   |> get_counts 
@@ -60,6 +60,7 @@ You also need to install these python libraries (via pip):
 - matplotlib
 - numpy
 - qiskit
+- qiskit_aer
 - pylatexenc
 
 And optional for IBM quantum cloud computers:
