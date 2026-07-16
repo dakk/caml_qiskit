@@ -12,8 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        ocaml-compiler: ["4.14", "5.3"]
-        python-version: ["3.13"]
+        ocaml-compiler: ["4.14.2", "5.3"]
 
     runs-on: ${{ matrix.os }}
 
@@ -24,13 +23,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
       - name: Install python dependencies
-        run: pip install qiskit qiskit-aer qiskit-ibm-runtime matplotlib pylatexenc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-dev python3-venv pkg-config
+          python3 -m venv "$HOME/qiskit-venv"
+          "$HOME/qiskit-venv/bin/pip" install qiskit qiskit-aer qiskit-ibm-runtime matplotlib pylatexenc
+          echo "$HOME/qiskit-venv/bin" >> "$GITHUB_PATH"
 
       - name: Set up OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
