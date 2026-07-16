@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "qiskit"
-version: "1.0.2"
+version: "2.0.1"
 synopsis: "Qiskit for OCaml"
 description: """
 An OCaml wrapper for the Qiskit quantum computing toolkit
@@ -17,12 +17,12 @@ dev-repo: "git+https://github.com/dakk/caml_qiskit.git"
 build: ["dune" "build" "-p" name "-j" jobs]
 
 depends: [
-  "ocaml" {>= "4.05.0"}
-  
-  "dune" {>= "3.10.0"}
-  "pyml" {>= "20220905"}
+  "ocaml" {>= "4.14.0"}
 
-  "ounit" {with-test & >= "2.2.7"}
+  "dune" {>= "3.10.0"}
+  "pyml" {>= "20250807"}
+
+  "ounit2" {with-test & >= "2.2.7"}
 
   "odoc" {dev & >= "2.2.1"}
   "bisect_ppx" {dev & >= "2.8.3"}
