@@ -83,8 +83,12 @@ let initialize_from_str (lb: string) (qc: qcircuit) =
   let lb' = Py.String.of_string lb in
   Py.Module.get_function qc "initialize" [| lb' |] |> ignore; qc
 
-let save_state (qc: qcircuit): qcircuit = 
-  Py.Module.get_function qc "save_state" [| |] |> ignore; qc    
+(* importing qiskit_aer injects the save_* methods into QuantumCircuit *)
+let qk_aer = lazy (Py.import "qiskit_aer")
+
+let save_state (qc: qcircuit): qcircuit =
+  Lazy.force qk_aer |> ignore;
+  Py.Module.get_function qc "save_state" [| |] |> ignore; qc
 
 let remove_final_measurements (qc: qcircuit): qcircuit =
   Py.Module.get_function qc "remove_final_measurements" [| |] |> ignore; qc    
@@ -145,12 +149,14 @@ let p = ag_p1 "p"
 let rx = ag_p1 "rx"
 let ry = ag_p1 "ry"
 let rz = ag_p1 "rz"
-let u3 = ag_p3 "u3"
-let u2 = ag_p2 "u2"
+let u = ag_p3 "u"
+(* u3/u2 were removed from qiskit; express them through the u gate *)
+let u3 = ag_p3 "u"
+let u2 phi lam = ag_p3 "u" (2.0 *. atan 1.0) phi lam
 
-let crx = ag2_p1 "rx"
-let cry = ag2_p1 "ry"
-let crz = ag2_p1 "rz"
+let crx = ag2_p1 "crx"
+let cry = ag2_p1 "cry"
+let crz = ag2_p1 "crz"
 let cp = ag2_p1 "cp"
 let cu = ag2_p4 "cu"
 
@@ -198,33 +204,80 @@ module BasicProvider = struct
     Py.Module.get_function iprov "get_backend" [| Py.String.of_string n |]
 end
 
-let aer_simulator (meth: string): Provider.backend = 
-  let m = Py.Import.add_module "aer_wrap" in
-  Py.Run.eval ~start:Py.File "import aer_wrap, qiskit_aer\naer_wrap.wrap = lambda m: qiskit_aer.AerSimulator(method=m)" |> ignore;
-  Py.Module.get_function m "wrap" [| Py.String.of_string meth |]
+let aer_simulator (meth: string): Provider.backend =
+  Py.Module.get_function_with_keywords (Lazy.force qk_aer) "AerSimulator"
+    [||] [("method", Py.String.of_string meth)]
 
-module IBMProvider = struct 
-  let qibm = Py.import "qiskit_ibm_provider"
+module IBMProvider = struct
+  (* deprecated in qiskit>=2, importing lazily *)
+  let qibm = lazy (Py.import "qiskit_ibm_provider")
 
   (* TODO: IBMPRovider class as an optional token parameter *)
-  let ibm_provider ?(token="") (_: unit): Provider.qprovider = 
+  let ibm_provider ?(token="") (_: unit): Provider.qprovider =
     if token <> "" then
-      Py.Module.get_function qibm "IBMProvider" [| Py.String.of_string token |]
+      Py.Module.get_function (Lazy.force qibm) "IBMProvider" [| Py.String.of_string token |]
     else
-      Py.Module.get_function qibm "IBMProvider" [||]
+      Py.Module.get_function (Lazy.force qibm) "IBMProvider" [||]
 
   let job_monitor (qj: qjob): unit =
-    Py.Module.get_function qibm "job_monitor" [| qj |] |> ignore
+    Py.Module.get_function (Lazy.force qibm) "job_monitor" [| qj |] |> ignore
     
   let save_account token (iprov: Provider.qprovider) = 
     Py.Module.get_function iprov "save_account" [| Py.String.of_string token |] |> ignore;
     iprov
 
-  let get_backend (n: string) (iprov: Provider.qprovider) : Provider.backend = 
+  let get_backend (n: string) (iprov: Provider.qprovider) : Provider.backend =
     Py.Module.get_function iprov "get_backend" [| Py.String.of_string n |]
 
-  let backends (iprov: Provider.qprovider) : Provider.backend list = 
+  let backends (iprov: Provider.qprovider) : Provider.backend list =
     Py.List.to_list (Py.Module.get_function iprov "backends" [||])
+end
+
+module IBMRuntime = struct
+  type qsampler = Py.Object.t
+
+  let qruntime = lazy (Py.import "qiskit_ibm_runtime")
+
+  let service ?(token="") (_: unit): Provider.qprovider =
+    let m = Lazy.force qruntime in
+    if token <> "" then
+      Py.Module.get_function_with_keywords m "QiskitRuntimeService"
+        [||] [("token", Py.String.of_string token)]
+    else
+      Py.Module.get_function m "QiskitRuntimeService" [||]
+
+  let save_account ?(instance="") ?(overwrite=false) (token: string): unit =
+    let cls = Py.Module.get (Lazy.force qruntime) "QiskitRuntimeService" in
+    let kw = [("channel", Py.String.of_string "ibm_quantum_platform");
+              ("token", Py.String.of_string token);
+              ("overwrite", Py.Bool.of_bool overwrite)] in
+    let kw = if instance <> "" then ("instance", Py.String.of_string instance)::kw else kw in
+    Py.Module.get_function_with_keywords cls "save_account" [||] kw |> ignore
+
+  let get_backend (n: string) (serv: Provider.qprovider): Provider.backend =
+    Py.Module.get_function serv "backend" [| Py.String.of_string n |]
+
+  let backends (serv: Provider.qprovider): Provider.backend list =
+    Py.List.to_list (Py.Module.get_function serv "backends" [||])
+
+  let least_busy (serv: Provider.qprovider): Provider.backend =
+    Py.Module.get_function serv "least_busy" [||]
+
+  let sampler (b: Provider.backend): qsampler =
+    Py.Module.get_function_with_keywords (Lazy.force qruntime) "SamplerV2"
+      [||] [("mode", b)]
+
+  let run (qc: qcircuit) (s: qsampler): qjob =
+    Py.Module.get_function s "run" [| Py.List.of_list [qc] |]
+
+  let job_status (j: qjob): string =
+    Py.Module.get_function j "status" [||] |> Py.Object.to_string
+
+  (* counts of the first pub result, with all classical registers joined *)
+  let get_counts (r: qres): qcounts =
+    let pub = Py.Sequence.get_item r 0 in
+    let data = Py.Module.get_function pub "join_data" [||] in
+    Py.Module.get_function data "get_counts" [||]
 end
 
 

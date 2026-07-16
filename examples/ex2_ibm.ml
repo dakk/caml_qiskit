@@ -1,9 +1,9 @@
 open Qiskit
 
 (* Create the circuit *)
-let qc = quantum_circuit 2 2 
-  |> h 0 
-  |> id 1 
+let qc = quantum_circuit 2 2
+  |> h 0
+  |> id 1
   |> barrier
   |> cx 0 1
   |> barrier
@@ -13,10 +13,11 @@ let qc = quantum_circuit 2 2
 
 
 (* Run the circuit on real quantum hardware *)
-let prov = IBMProvider.ibm_provider ~token:"TOKEN" () in
-let j = IBMProvider.get_backend "ibmq_london" prov |> run qc in
-IBMProvider.job_monitor j;
-j 
-  |> result 
-  |> get_counts 
+let serv = IBMRuntime.service ~token:"TOKEN" () in
+let backend = IBMRuntime.least_busy serv in
+let j = IBMRuntime.sampler backend |> IBMRuntime.run (transpile qc backend) in
+Printf.printf "job status: %s\n" (IBMRuntime.job_status j);
+j
+  |> result
+  |> IBMRuntime.get_counts
   |> Visualization.plot_histogram;;

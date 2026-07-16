@@ -42,6 +42,14 @@ let etests = "test suite for quantum_circuit execution" >::: [
     let c = j |> result in
     let r = get_unitary c qc in
     assert_equal true (r<>Py.none)
+  );
+  "ibm_runtime sampler (local mode)" >:: (fun _ ->
+    let backend = aer_simulator "automatic" in
+    let qc = quantum_circuit 2 2 |> h 0 |> cx 0 1 |> measure 0 0 |> measure 1 1 in
+    let qc' = transpile qc backend in
+    let j = IBMRuntime.sampler backend |> IBMRuntime.run qc' in
+    let c = j |> result |> IBMRuntime.get_counts in
+    assert_equal true (c<>Py.none)
   )
 ]
 

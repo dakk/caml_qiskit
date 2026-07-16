@@ -84,8 +84,26 @@ let qctests = "test suite for quantum_circuit" >::: [
     assert_equal qcs 1
   );
   "initialize_from_str" >:: (fun _ ->
-    let qcs = quantum_circuit 2 0 |> initialize_from_str "10" |> size in 
+    let qcs = quantum_circuit 2 0 |> initialize_from_str "10" |> size in
     assert_equal qcs 1
+  );
+  "single qubit gates" >:: (fun _ ->
+    let qcs = quantum_circuit 1 0
+      |> h 0 |> x 0 |> y 0 |> z 0 |> s 0 |> sdg 0 |> t 0 |> tdg 0 |> id 0
+      |> p 0.5 0 |> rx 0.5 0 |> ry 0.5 0 |> rz 0.5 0
+      |> u 0.5 0.5 0.5 0 |> u3 0.5 0.5 0.5 0 |> u2 0.5 0.5 0 |> size in
+    assert_equal qcs 16
+  );
+  "two qubit gates" >:: (fun _ ->
+    let qcs = quantum_circuit 2 0
+      |> cx 0 1 |> cy 0 1 |> cz 0 1 |> ch 0 1 |> swap 0 1
+      |> crx 0.5 0 1 |> cry 0.5 0 1 |> crz 0.5 0 1 |> cp 0.5 0 1
+      |> cu 0.5 0.5 0.5 0.5 0 1 |> size in
+    assert_equal qcs 10
+  );
+  "three qubit gates" >:: (fun _ ->
+    let qcs = quantum_circuit 3 0 |> ccx 0 1 2 |> toffoli 0 1 2 |> cswap 0 1 2 |> size in
+    assert_equal qcs 3
   );
 ]
 
