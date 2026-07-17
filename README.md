@@ -1,7 +1,7 @@
 # Caml_qiskit
 
 [![CI](https://github.com/dakk/caml_qiskit/actions/workflows/ci.yml/badge.svg)](https://github.com/dakk/caml_qiskit/actions/workflows/ci.yml)
-[![opam](https://img.shields.io/opam/v/qiskit)](https://opam.ocaml.org/packages/qiskit/)
+[![OCaml](https://img.shields.io/badge/OCaml-opam-EC6813?logo=ocaml&logoColor=white)](https://opam.ocaml.org/packages/qiskit/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 An OCaml wrapper for IBM Qiskit quantum computing toolkit.
