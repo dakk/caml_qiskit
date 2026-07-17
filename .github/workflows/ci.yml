@@ -12,7 +12,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        ocaml-compiler: ["4.14.2", "5.3", "5.5"]
+        # stdcompat (pyml dependency) requires ocaml (>= 4.11 & < 4.14.3) | (>= 5.0 & < 5.4);
+        # add newer compilers back when a stdcompat release supports them
+        ocaml-compiler: ["4.14.2", "5.3"]
 
     runs-on: ${{ matrix.os }}
 
